@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Adafruit_INA219.h>
 
+
 #define motorPin1 8
 #define motorPin2 9
 #define motorPin3 10
@@ -14,6 +15,7 @@ Adafruit_INA219 ina219;
 //STEPPER INITIAL SETUP
 AccelStepper stepper(AccelStepper::FULL4WIRE,motorPin1, motorPin3, motorPin2, motorPin4);
 int startingPosition = 0;
+double optimal_angles[] = {-90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -90, -87.6633278353471, -84.2661106613641, -80.89733310920033, -77.55156563727671, -74.2236607898597, -70.908772185975, -67.60237065826973, -64.30025872351993, -60.99858421897897, -57.693853622290945, -54.38294528340668, -51.063122531748185, -47.73204637931164, -44.3877873216574, -41.028835547780254, -37.65410871315806, -34.2629563169917, -30.85515966487738, -27.430926402477485, -23.990878682941208, -20.53603418601884, -17.067779440263894, -13.587835203892537, -10.098214020377517, -6.60117045881347, -3.0991449477908497, 0.4052975174854311, 3.909532204971062, 7.410941201753367, 10.90697977605977, 14.395240637342287, 17.87351431941664, 21.339844152151954, 24.7925746118845, 28.230392219829643, 31.652358557800255, 35.057935359821776, 38.44700198877301, 41.81986589787404, 45.17726689462972, 48.520376163877806, 51.85079106807788, 55.17052673324636, 58.48200535685959, 61.788044050574136, 65.09184186552835, 68.39696644999962, 71.70734056452415, 75.02722843128566, 78.36122162384815, 81.71422390792914, 85.09143412121767, 88.49832582633016, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90};
 
 
 //SENSOR INITIAL SETUP 
@@ -68,11 +70,26 @@ void setup(void) {
   Serial.println("Measuring voltage and current with INA219 ...");
 
     // SENSOR SETUP
-//  pinMode(base, OUTPUT);
-//  pinMode(2, OUTPUT);
-
+//   pinMode(base, OUTPUT);
+//   pinMode(2, OUTPUT);
+ 
 //  last = millis();
 //  led_last = millis();
+
+    // TIME SETUP
+    int hour; // 24 hour time 
+    int minute;
+    Serial.println("Type the current hour (as an integer, 24 hour time):");
+    while(Serial.available() == 0) { }
+    hour = Serial.read();
+    Serial.println("Type the current minute:");
+    while(Serial.available() == 0) { }
+    minute = Serial.read();
+    Serial.println("Thank you! Now calibrating...");
+    Serial.println(hour, minute);
+    
+
+    delay(5000);
   
 
 }
@@ -121,8 +138,9 @@ void loop(void) {
    current_mA = ina219.getCurrent_mA();
    power_mW = ina219.getPower_mW();
    loadvoltage = busvoltage + (shuntvoltage / 1000);
-  
-   Serial.println("Bus Voltage:   "); 
+   voltage_oc = voltage*0.7;
+
+   Serial.print("Bus Voltage:   "); 
    Serial.println(busvoltage); 
    Serial.println(" V");
    Serial.println("Shunt Voltage: "); 
@@ -137,5 +155,5 @@ void loop(void) {
    Serial.println("");
  
    delay(2000);
-//  }
+  
 }
