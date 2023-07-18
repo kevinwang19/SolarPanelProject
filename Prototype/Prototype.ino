@@ -36,11 +36,15 @@ void setup(void)
   Serial.begin(115200);
 
   // STEPPER MOTOR SETUP
+   auto initial_time = std::chrono::system_clock::now();
+   print(initial_time)
+
+  // STEPPER MOTOR SETUP
   stepper.setMaxSpeed(1000);
+  startingPosition = stepper.currentPosition();
   stepper.setSpeed(750);
   stepper.setAcceleration(25);
-  startingPosition = stepper.currentPosition();
-  stepper.moveTo(2000);
+  // stepper.moveTo(2000);
 
   while (!Serial)
   {
@@ -95,7 +99,7 @@ void setup(void)
   delay(5000);
 }
 
-void loop(void)
+void loop()
 {
 
   // STEPPER MOTOR OPERATION
@@ -104,6 +108,12 @@ void loop(void)
   // If at the end of travel go to the other end
   if (stepper.currentPosition() == startingPosition)
     stepper.disableOutputs();
+  Serial.println(stepper.currentPosition());
+    // If at the end of travel go to the other end
+  if (stepper.currentPosition() == startingPosition)
+    stepper.disableOutputs();
+  stepper.setSpeed(750);  
+  stepper.moveTo(2000);
 
   // TIME TRACKING
   if (millis() - last > 1000.0 / freq)
