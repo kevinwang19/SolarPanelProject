@@ -1,11 +1,13 @@
+//TODO: Global clock system using millis
+
 #include <AccelStepper.h>
 #include <Wire.h>
 #include <Adafruit_INA219.h>
 
-#define motorPin1 8
-#define motorPin2 9
-#define motorPin3 10
-#define motorPin4 11
+#define motorPin1 14
+#define motorPin2 27
+#define motorPin3 26
+#define motorPin4 25
 
 Adafruit_INA219 ina219;
 
@@ -17,7 +19,7 @@ const int stepsPerRevolution = 2048;
 
 
 // SENSOR INITIAL SETUP
-int base = 6;   // Define pins
+int base = 33;   // Define pins
 float freq = 2; // Reporting frequency Hz
 int del = 2;    // Delay after changing state of transistor
 
@@ -32,7 +34,8 @@ float t = 0;
 int led = 2000;
 bool state = false;
 
-int hour, minute;
+int hour = 10;
+int minute = 50;
 
 void setup()
 {
@@ -40,15 +43,10 @@ void setup()
   Serial.begin(115200);
 
   // STEPPER MOTOR SETUP
-//   auto initial_time = std::chrono::system_clock::now();
-//   print(initial_time)
-
-  // STEPPER MOTOR SETUP
   startingPosition = stepper.currentPosition();
   stepper.setSpeed(750);
   stepper.setMaxSpeed(300);  // Set the maximum speed of the stepper motor
   stepper.setAcceleration(100);  // Set the acceleration of the stepper motor (adjust as needed)
-  // stepper.moveTo(2000);
 //  setTime(0, 0, 0, 1, 1, 2023);  // Set an initial time (hour, minute, second, day, month, year)
 
   while (!Serial)
@@ -84,34 +82,34 @@ void setup()
 
   last = millis();
   led_last = millis();
-//
-//  // TIME SETUP
+
+  // TIME SETUP
 //  Serial.println("Type the current hour (as an integer, 24 hour time):");
-//  while (Serial.available() == 0)
-//  {
-//  }
+//
 //  hour = Serial.read();
 //  Serial.println("Type the current minute:");
-//  while (Serial.available() == 0)
-//  {
-//  }
+//
 //  minute = Serial.read();
 //  Serial.println("Thank you! Now calibrating...");
 //  Serial.println(hour, minute);
-//
-//  delay(5000);
+
+  int initial_angle_index = (hour * 4) + (minute / 15);
+  int initial_angle = optimal_angles[initial_angle_index];
+  int initial_steps = initial_angle * stepsPerRevolution / 360;
+  stepper.moveTo(initial_steps);
+  delay(10*1000);
 }
 
 void loop()
 { 
+  
   // STEPPER MOTOR OPERATION
   int angle_index = (hour * 4) + (minute / 15);
   int optimal_angle = optimal_angles[angle_index];
 
   // Calculate the difference between the previous optimal angle and the new one
-  int previousAngleIndex = angle_index - 1; // Calculate the index of the previous optimal angle
-  int previousOptimalAngle = optimal_angles[previousAngleIndex];
-  int angleDifference = optimalAngle - previousOptimalAngle;
+  int previous_optimal_angle = optimal_angles[optimal_angle - 1];
+  int angleDifference = optimal_angle - previous_optimal_angle;
 
   // Move the stepper motor by the angle difference
   int stepsToMove = angleDifference * stepsPerRevolution / 360;
@@ -122,9 +120,9 @@ void loop()
       stepper.run();
     }
     
-  // // If at the end of travel go to the other end
-  // if (stepper.currentPosition() == startingPosition)
-  //   stepper.disableOutputs();
+   // If at the end of travel go to the other end
+   if (stepper.currentPosition() == startingPosition)
+     stepper.disableOutputs();
 
   // TIME TRACKING
   if (millis() - last > 1000.0 / freq)
@@ -138,12 +136,8 @@ void loop()
     // SENSOR OPERATION
     // measure current
     current_mA = ina219.getCurrent_mA();
-    Serial.println(digitalRead(base));
-
     digitalWrite(base, LOW);
     delay(10);
-
-    Serial.println(digitalRead(base));
 
     // measure voltage
     voltage = ina219.getBusVoltage_V();
@@ -153,7 +147,6 @@ void loop()
     power_mW = (0.7 * voltage) * current_mA;
 
     // Format: Time, Voltage, Current, Estimated Power
-    Serial.print(t);
     Serial.print(", ");
     Serial.print(voltage);
     Serial.print(", ");
@@ -161,5 +154,5 @@ void loop()
     Serial.print(", ");
     Serial.println(power_mW);
   }
-  delay(15 * 60 * 1000);
+  delay(100);
 }
