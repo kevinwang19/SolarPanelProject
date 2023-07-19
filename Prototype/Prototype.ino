@@ -34,6 +34,7 @@ float t = 0;
 int led = 2000;
 bool state = false;
 
+int initial_hour = 10;
 int initial_minute = 50;
 int elapsed_hour = 0;
 int elapsed_minute = 0;
