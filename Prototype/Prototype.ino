@@ -72,59 +72,54 @@ void setup()
       delay(10);
     }
   }
-//  // To use a slightly lower 32V, 1A range (higher precision on amps):
-//  // ina219.setCalibration_32V_1A();
-//  // Or to use a lower 16V, 400mA range (higher precision on volts and amps):
-  ina219.setCalibration_16V_400mA();
-//
+  ina219.setCalibration_16V_400mA(); // Set INA219 to slightly lower 32V, 1A range (higher precision on amps):
   Serial.println("Measuring voltage and current with INA219 ...");
-  // SENSOR SETUP
+ 
+  // Sensor setup
   pinMode(base, OUTPUT);
 
-  last = millis();
-  led_last = millis();
+  last = millis(); // Set time for last
+  led_last = millis(); // Set time for LED
 
-  stepper.setSpeed(120);
-  stepper.setMaxSpeed(300);
-  stepper.setAcceleration(100);  
-}
+  stepper.setSpeed(120); // Set speed for stepper motor
+  stepper.setMaxSpeed(300); // Set maximum speed for stepper motor
+  stepper.setAcceleration(100);  // Set accelerator for stepper motor
 
 
 void loop()
 { 
-  elapsed_hour = round(t / 3600);
+
+  // Get current time in elapsed hour and minutes
+  elapsed_hour = round(t / 3600); 
   elapsed_minute = ((t / 3600 - round(t/3600)) * 60);
   current_hour = initial_hour + elapsed_hour;
   current_minute = initial_minute + elapsed_minute;
 
-
-  // STEPPER MOTOR OPERATION
+  // Get optimal angle of stepper motor from array, based on time
   int angle_index = (current_hour * 4) + (current_minute / 15);
   int optimal_angle = optimal_angles[angle_index];
-
 
   // Calculate the difference between the previous optimal angle and the new one
   int previous_optimal_angle = optimal_angles[angle_index - 1];
   int angleDifference = abs(optimal_angle - previous_optimal_angle);
-  
 
   // Move the stepper motor by the angle difference
   int stepsToMove = angleDifference * stepsPerDegree;
-  // only run every 15 mins
 
+  // Set checkers to only run movement every 15 mins
   if (current_minute % 15 != 0 && (current_minute != initial_minute) ) {
     checked = false;
   }
-
   if (!checked && (current_minute % 15 == 0) && (current_minute != initial_minute) && (stepper.distanceToGo() == 0)) {
     stepper.move(stepsToMove);
     checked = true;
   
   }
 
+  // Run stepper motor
   stepper.run();
 
-  // TIME TRACKING
+  // Time tracker
   if (millis() - last > 1000.0 / freq)
   {
     last = millis();
@@ -133,7 +128,6 @@ void loop()
     digitalWrite(base, HIGH);
     delay(10);
 
-    // SENSOR OPERATION
     // measure current
     current_mA = ina219.getCurrent_mA();
     digitalWrite(base, LOW);
